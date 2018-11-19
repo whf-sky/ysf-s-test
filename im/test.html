@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>namespace</title>
+</head>
+<body>
+<p>hello!</p>
+<script src="socket.io.dev.js" type="application/javascript" ></script>
+<script>
+    var chat = io('http://gh.whf0.com:10007/news',{
+        "query":{
+            "token":"xxx",
+            "userName":"xxx",
+        }
+    });
+
+    chat.on('a message', function(data){
+        console.log(data);
+    });
+
+    // news.on('item', function(data){
+    //  console.log(data);
+    // })
+</script>
+</body>
+</html>

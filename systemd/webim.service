@@ -1,0 +1,15 @@
+[Unit]
+Description=Webim Server
+After=network.target
+After=syslog.target
+
+[Service]
+Type=forking
+PIDFile=/tmp/webim.pid
+ExecStart=/home/work/php7/bin/php /home/work/www/webim.server/index.php start -d
+ExecStop=/bin/kill $MAINPID
+ExecReload=/bin/kill -USR1 $MAINPID
+Restart=always
+
+[Install]
+WantedBy=multi-user.target graphical.target

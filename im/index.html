@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>socket.io test</title>
+    <script src="jquery.min.js" type="application/javascript"></script>
+    <script src="socket.io.dev.js" type="application/javascript" ></script>
+    <script src="msgpack.min.js" type="application/javascript" ></script>
+    <script src="component.emitter.js" type="application/javascript" ></script>
+    <script src="socket.io-msgpack-parser.js" type="application/javascript" ></script>
+    <style>
+        #history div{border-bottom: 1px dashed #ccc;}
+        #bottomTags button{background:lightskyblue;}
+    </style>
+    <script>
+        $(function(){
+            var socket = io('http://gh.whf0.com:10007',{
+                parser: msgpackParser,
+                transports:['websocket'],
+//        "query":{
+//            "token":"xxx",
+//            "userName":"xxx",
+//        }
+            });
+            socket.on('message', function(msg){
+                $("#history").prepend("<div>message："+msg+"</div>");
+            });
+
+            socket.on('fd', function(msg){
+                $("#history").prepend("<div>fd："+msg+"</div>");
+            });
+
+            socket.on('event', function(msg){
+                $("#history").prepend("<div>event："+msg+"</div>");
+            });
+            socket.on('web', function(msg){
+                $("#history").prepend("<div>web："+msg+"</div>");
+            });
+
+            $("#send").click(function(){
+                socket.emit('message', $("#msg").val(),function (msg) {
+                    $("#history").prepend("<div>ack："+msg+"</div>");
+                });
+                $("#msg").val('');
+            });
+        });
+    </script>
+</head>
+<body>
+<textarea rows="10" cols="100" id="msg"></textarea>
+<button id="send">发送</button><br>
+<div id="bottomTags"></div>
+<div id="history" style="width: 100%;font-size: 14px;line-height: 40px;" ></div>
+</body>
+</html>

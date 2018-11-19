@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="jquery.min.js" type="application/javascript"></script>
+    <script src="socket.io.js" type="application/javascript" ></script>
+    <style>
+        #history div{
+            border-bottom: 1px dashed #ccc;
+        }
+        #bottomTags button{
+            background:lightskyblue;
+        }
+
+    </style>
+    <script>
+$(function(){
+
+        function get(name)
+        {
+            var reg = new RegExp("(^|&)"+ name +"=([^&]*)(&|$)");
+            var r = window.location.search.substr(1).match(reg);
+            if(r!=null)return  unescape(r[2]); return null;
+        }
+        function objToStr(obj) {
+            var msg = '';
+            for(var i in obj){
+                msg += "["+obj[i]['key']+"："+obj[i]['name']+"] ";
+            }
+            return msg;
+        }
+        var socket = io('https://www.inno-life.cc:10008');
+
+        socket.on('sign', function(msg){
+            socket.emit('sign', {"ucode":get('ucode')});
+        });
+
+        function bottomTags(msg) {
+            if(msg.length ==0){
+                return ;
+            }
+            $("#bottomTags").html('');
+            for(var i in msg){
+                $("#bottomTags").prepend('<button value="'+msg[i]['key']+'">'+msg[i]['name']+'</button>');
+            }
+            $("#history").prepend("<div>bottom tags："+objToStr(msg)+"</div>");
+        }
+
+        function messageStatus(msg) {
+            console.log(msg);
+            $("#history").prepend("<div>message status：["+msg['id']+"："+msg['identify']+"]</div>");
+        }
+
+        function message(msg) {
+            $("#history").prepend("<div>message：["+msg['id']+"："+msg['content']+"]</div>");
+            console.log(msg);
+        }
+
+        function messages(msg) {
+            for(var i in msg){
+                message(msg[i]);
+            }
+        }
+
+        socket.on('message', function(msg){
+            message(msg);
+        });
+
+        socket.on('bottom tags', function(msg){
+            bottomTags(msg);
+        });
+
+        socket.on('message status', function(msg){
+            messageStatus(msg);
+            bottomTags(msg['bottom_tags']);//标签
+            messages(msg['auto_replay']);//自动回复
+        });
+
+        socket.on('welcome', function(msg){
+            $("#history").prepend("<div>welcome："+msg+"</div>");
+            socket.emit('ask');
+        });
+
+        socket.on('error', function(msg){
+            $("#history").prepend("<div>error：["+msg['code']+": "+msg['message']+"]</div>");
+        });
+
+
+
+
+
+        $("#send").click(function(){
+            var message = $("#msg").val();
+            var type = $("#type").val();
+            if(type == 'msg'){
+                socket.emit('message', {"identify":new Date().getTime(), "content":message,"msg_type":"text"});
+            }else if(type == 'event'){
+                socket.emit('click', {"identify":new Date().getTime(),"eventKey":message});
+            }
+            $("#msg").val('');
+        });
+
+        $("#topTags button").click(function(){
+            var eventKey = $(this).val();
+            socket.emit('click', {"identify":new Date().getTime(),"eventKey":eventKey});
+        });
+
+        $("#bottomTags").delegate("button", "click",function(event) {
+            $("#bottomTags").html('');
+            var eventKey = $(this).val();
+            socket.emit('click', {"identify":new Date().getTime(),"eventKey":eventKey});
+        });
+    });
+    </script>
+</head>
+<body>
+<textarea rows="10" cols="100" id="msg"></textarea>
+<select id="type">
+    <option value="msg">消息</option>
+    <option value="event">事件</option>
+</select>
+<button id="send">发送</button><br>
+<div id="topTags"><button value="WEBIM_LLBX_0">来聊保险</button><button value="WEBIM_CPXQ">测评需求</button><button value="WEBIM_WYTC">我要吐槽</button></div>
+<div id="bottomTags"></div>
+<div id="history" style="width: 100%;font-size: 14px;line-height: 40px;" ></div>
+</body>
+</html>
